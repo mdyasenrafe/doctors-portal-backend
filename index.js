@@ -6,7 +6,7 @@ require("dotenv").config();
 const { MongoClient } = require("mongodb");
 
 const port = env.process.PORT || 5000;
-
+// firebase
 const serviceAccount = JSON.parse(env.process.FIREBASE_SERVICE_ACCOUNT);
 
 admin.initializeApp({
