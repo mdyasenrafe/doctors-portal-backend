@@ -5,9 +5,9 @@ const admin = require("firebase-admin");
 require("dotenv").config();
 const { MongoClient } = require("mongodb");
 
-const port = env.process.PORT || 5000;
+const port = process.env.PORT || 5000;
 // firebase
-const serviceAccount = JSON.parse(env.process.FIREBASE_SERVICE_ACCOUNT);
+const serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT);
 
 admin.initializeApp({
   credential: admin.credential.cert(serviceAccount),
@@ -16,7 +16,7 @@ admin.initializeApp({
 app.use(cors());
 app.use(express.json());
 // uri
-const uri = `mongodb+srv://${env.process.DB_USER}:${env.process.DB_PASS}@cluster0.6mulb.mongodb.net/myFirstDatabase?retryWrites=true&w=majority`;
+const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@cluster0.6mulb.mongodb.net/myFirstDatabase?retryWrites=true&w=majority`;
 const client = new MongoClient(uri, {
   useNewUrlParser: true,
   useUnifiedTopology: true,
