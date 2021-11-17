@@ -2,10 +2,11 @@ const express = require("express");
 const app = express();
 const cors = require("cors");
 const admin = require("firebase-admin");
+const ObjectID = require("mongodb").ObjectId;
 require("dotenv").config();
 const { MongoClient } = require("mongodb");
-
 const port = process.env.PORT || 5000;
+const stripe = require("stripe")(process.env.STRIPE_SECRET);
 // firebase
 const serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT);
 
@@ -46,6 +47,27 @@ async function run() {
       const appointments = await cursor.toArray();
       res.send(appointments);
     });
+    // appoints get
+    app.get("/appointments/:id", verifyToken, async (req, res) => {
+      const id = req.params.id;
+      const query = { _id: ObjectID(id) };
+      const cursor = await appointmentsCollection.findOne(query);
+      res.send(cursor);
+    });
+    // // appointmenst put
+    app.put("/appointments/:id", async (req, res) => {
+      const id = req.params.id;
+      const payment = req.body;
+      console.log(payment);
+      const filter = { _id: ObjectID(id) };
+      const updateDoc = {
+        $set: {
+          payment: payment,
+        },
+      };
+      const result = await appointmentsCollection.updateOne(filter, updateDoc);
+      res.json(result);
+    });
     // appointments post
     app.post("/appointments", async (req, res) => {
       const appointment = req.body;
@@ -58,7 +80,7 @@ async function run() {
       const result = await user.toArray();
       res.send(result);
     });
-    // users get email
+    // users check admin
     app.get("/users/:email", async (req, res) => {
       const email = req.params.email;
       const query = { email: email };
@@ -89,7 +111,7 @@ async function run() {
       );
       res.json(result);
     });
-    // admin  api
+    // make admin  api
     app.put("/users/admin", verifyToken, async (req, res) => {
       const user = req.body;
       const requester = req.decodedEmail;
@@ -110,6 +132,18 @@ async function run() {
           .status(403)
           .json({ message: "you do not have access to make admin" });
       }
+    });
+    //
+    app.post("/create-payment-intent", async (req, res) => {
+      const paymentInfo = req.body;
+      const amount = paymentInfo.price * 100;
+      const paymentIntent = await stripe.paymentIntents.create({
+        currency: "usd",
+        amount: amount,
+        payment_method_types: ["card"],
+      });
+      console.log("paymentIntent", paymentIntent);
+      res.json({ clientSecret: paymentIntent.client_secret });
     });
     // console
     console.log("database connect");
